@@ -49,7 +49,7 @@ The internal lab network is used for all investigation traffic.
 |    1 | Normal Traffic Baseline                                 | Completed |
 |    2 | TCP Handshake and HTTP Connection Analysis              | Completed |
 |    3 | DNS Investigation                                       | Completed |
-|    4 | Nmap Port Scan Investigation                            | Planned   |
+|    4 | Nmap Port Scan Investigation                            | Completed |
 |    5 | ICMP Ping Sweep Investigation                           | Planned   |
 |    6 | Plaintext FTP Credential Exposure                       | Planned   |
 |    7 | SSH vs FTP Comparison                                   | Planned   |
