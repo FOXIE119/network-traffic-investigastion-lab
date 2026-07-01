@@ -47,7 +47,7 @@ The internal lab network is used for all investigation traffic.
 | Case | Title                                                   | Status    |
 | ---: | ------------------------------------------------------- | --------- |
 |    1 | Normal Traffic Baseline                                 | Completed |
-|    2 | TCP Handshake and HTTP Connection Analysis              | Planned   |
+|    2 | TCP Handshake and HTTP Connection Analysis              | Completed |
 |    3 | DNS Investigation                                       | Planned   |
 |    4 | Nmap Port Scan Investigation                            | Planned   |
 |    5 | ICMP Ping Sweep Investigation                           | Planned   |
