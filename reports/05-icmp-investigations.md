@@ -1,0 +1,164 @@
+# Case 5 — ICMP Ping Sweep / Local Host Discovery Investigation
+
+## Scenario
+
+An internal host generated traffic across multiple IP addresses in the local lab subnet. The purpose of this case is to determine whether the observed activity is consistent with local host discovery.
+
+The capture includes both ARP and ICMP traffic because local subnet discovery may involve ARP resolution before ICMP packets are sent.
+
+## Objective
+
+Identify local host discovery behavior using packet-level evidence.
+
+## Analyst Question
+
+Is the traffic consistent with host discovery or normal connectivity testing?
+
+## PCAP File
+
+```text
+pcaps/05-icmp-pingsweep-investigation.pcap
+```
+
+## Lab Environment
+
+| Asset              | Hostname         | Role                               | IP Address                   |
+| ------------------ | ---------------- | ---------------------------------- | ---------------------------- |
+| Source host        | attacker-kali    | Ping sweep source                  | 192.168.100.10               |
+| Capture sensor     | analyzer-kali    | Packet capture and analysis sensor | 192.168.100.20               |
+| Destination server | victim-ubuntu    | Responding host                    | 192.168.100.30               |
+| Scanned range      | Lab subnet range | Local host discovery range         | 192.168.100.1–192.168.100.30 |
+
+## Tools Used
+
+| Tool      | Purpose                                                           |
+| --------- | ----------------------------------------------------------------- |
+| tcpdump   | Captured ARP and ICMP traffic from the analyzer VM                |
+| Wireshark | Analyzed ARP requests, ICMP packets, endpoints, and conversations |
+| ping      | Generated controlled ICMP host discovery traffic                  |
+| Bash loop | Repeated ping command across a range of IP addresses              |
+
+## Capture Command
+
+The packet capture was performed from `analyzer-kali` on the internal lab interface `eth1`.
+
+```bash
+sudo tcpdump -i eth1 -nn -w ~/pcaps/05-icmp-pingsweep-investigation.pcap '(icmp or arp)'
+```
+
+## Traffic Generation Command
+
+The following command was executed from `attacker-kali`.
+
+```bash
+for i in $(seq 1 30); do ping -c 1 -W 1 192.168.100.$i; done
+```
+
+This command attempted to send one ICMP echo request to each IP address from `192.168.100.1` to `192.168.100.30`.
+
+## Capture Summary
+
+| Field                                 | Value                        |
+| ------------------------------------- | ---------------------------- |
+| Packets captured                      | 93                           |
+| Snapshot length                       | 262144 bytes                 |
+| Packets dropped                       | 0                            |
+| Source IP                             | 192.168.100.10               |
+| Target range                          | 192.168.100.1–192.168.100.30 |
+| ARP requests to multiple IPs observed | Yes                          |
+| ICMP echo requests observed           | Yes                          |
+| ICMP echo replies observed            | Yes                          |
+
+## Wireshark Filters Used
+
+```text
+arp || icmp
+arp
+ip.src == 192.168.100.10 && icmp.type == 8
+ip.dst == 192.168.100.10 && icmp.type == 0
+icmp.type == 8
+icmp.type == 0
+```
+
+## Evidence Collected
+
+| Evidence                              | Screenshot                                                           |
+| ------------------------------------- | -------------------------------------------------------------------- |
+| ARP and ICMP overview                 | `screenshots/05-icmp-pingsweep/01-arp-and-icmp-overview.png`         |
+| ARP requests to multiple IP addresses | `screenshots/05-icmp-pingsweep/02-arp-requests-to-multiple-ips.png`  |
+| ICMP echo requests from source        | `screenshots/05-icmp-pingsweep/03-icmp-echo-requests-live-hosts.png` |
+| ICMP echo replies from live hosts     | `screenshots/05-icmp-pingsweep/04-icmp-echo-replies-live-hosts.png`  |
+| IPv4 endpoints                        | `screenshots/05-icmp-pingsweep/05-ipv4-endpoints.png`                |
+| IPv4 conversations                    | `screenshots/05-icmp-pingsweep/06-ipv4-conversations.png`            |
+
+## Packet-Level Findings
+
+### Finding 1 — ARP Requests Were Sent to Multiple IP Addresses
+
+The capture shows ARP requests from the source host while it attempted to reach multiple IP addresses in the local subnet.
+
+In a local Ethernet network, a host must resolve an IP address to a MAC address before it can send IPv4 traffic to that host. For inactive or unassigned IP addresses, the source may generate ARP requests without receiving a response.
+
+This behavior supports local host discovery because the source attempted to identify which IP addresses were active in the subnet.
+
+### Finding 2 — ICMP Echo Requests Were Observed from the Source Host
+
+ICMP echo requests were observed from `192.168.100.10`.
+
+These requests were generated by the ping sweep command and were sent as part of the attempt to identify reachable hosts.
+
+### Finding 3 — ICMP Echo Replies Identified Live Hosts
+
+ICMP echo replies were observed returning to `192.168.100.10`.
+
+The responding hosts represent systems that were reachable during the sweep. In this lab, expected live systems included the analyzer and victim hosts.
+
+### Finding 4 — The Pattern Differs from a Single Connectivity Test
+
+A normal troubleshooting ping usually targets one destination, such as checking whether a server is reachable.
+
+In this case, the source attempted to contact a range of IP addresses from `192.168.100.1` through `192.168.100.30`. This broader targeting pattern is consistent with host discovery rather than a single connectivity check.
+
+## Timeline
+
+| Activity              | Description                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Capture started       | tcpdump capture started on analyzer-kali `eth1`                                     |
+| Ping sweep executed   | Bash loop sent one ping attempt to each IP from `192.168.100.1` to `192.168.100.30` |
+| ARP activity observed | Source attempted to resolve multiple local IP addresses                             |
+| ICMP replies observed | Live hosts responded to echo requests                                               |
+| Capture stopped       | tcpdump capture stopped after the sweep completed                                   |
+| PCAP verified         | Saved PCAP confirmed to contain ARP and ICMP traffic                                |
+
+## MITRE ATT&CK Mapping
+
+| Technique | Name                    | Reason                                                                                                        |
+| --------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| T1018     | Remote System Discovery | The source host attempted to identify reachable systems by probing multiple IP addresses in the local subnet. |
+
+## Conclusion
+
+The traffic is consistent with local host discovery.
+
+The key evidence is that one source host attempted to reach multiple IP addresses in the same subnet. The capture shows ARP requests to multiple IPs and ICMP echo request/reply traffic for live hosts.
+
+This pattern is different from a single normal connectivity check and aligns with ping sweep behavior.
+
+## Recommended Actions
+
+In a real environment, the following actions would be recommended:
+
+* Confirm whether the host discovery activity was authorized.
+* Identify the owner and purpose of the source host.
+* Review endpoint logs on the source system to determine which process generated the sweep.
+* Check whether the source host also performed port scanning or follow-up access attempts.
+* Review firewall, IDS, or network monitoring logs for similar activity against other subnets.
+* Consider alerting on repeated host discovery activity from non-administrative systems.
+
+## Limitations
+
+Host discovery activity does not automatically prove malicious intent. Ping sweeps and ARP discovery can be used for troubleshooting, asset discovery, monitoring, or authorized administration.
+
+This capture was generated intentionally in a controlled lab.
+
+Packet capture alone shows network behavior, but additional context such as user activity, endpoint process logs, change tickets, and asset ownership would be required before escalation in a real investigation.
