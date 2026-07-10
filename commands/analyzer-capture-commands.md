@@ -82,3 +82,17 @@ tcpdump -nn -r ~/pcaps/05-icmp-pingsweep-investigation.pcap arp | head -30
 tcpdump -nn -r ~/pcaps/05-icmp-pingsweep-investigation.pcap icmp | head -30
 tcpdump -nn -r ~/pcaps/05-icmp-pingsweep-investigation.pcap | head -50
 ```
+
+## Case 6 — Plaintext FTP Credential Exposure
+
+```bash
+sudo tcpdump -i eth1 -nn -w ~/pcaps/06-plaintext-ftp-credential-exposure.pcap 'host 192.168.100.30 and tcp port 21'
+```
+
+### Verification:
+
+```bash
+ls -lh ~/pcaps/06-plaintext-ftp-credential-exposure.pcap
+tcpdump -nn -r ~/pcaps/06-plaintext-ftp-credential-exposure.pcap | head -40
+tcpdump -nn -r ~/pcaps/06-plaintext-ftp-credential-exposure.pcap 'tcp port 21' | head -40
+```

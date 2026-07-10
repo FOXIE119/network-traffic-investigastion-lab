@@ -51,7 +51,7 @@ The internal lab network is used for all investigation traffic.
 |    3 | DNS Investigation                                       | Completed |
 |    4 | Nmap Port Scan Investigation                            | Completed |
 |    5 | ICMP Ping Sweep / Local Host Discovery Investigation    | Completed |
-|    6 | Plaintext FTP Credential Exposure                       | Planned   |
+|    6 | Plaintext FTP Credential Exposure                       | Completed |
 |    7 | SSH vs FTP Comparison                                   | Planned   |
 |    8 | Suspicious Repeated Connection / Beaconing-like Traffic | Planned   |
 

@@ -60,3 +60,15 @@ ip.dst == 192.168.100.10 && icmp.type == 0
 icmp.type == 8
 icmp.type == 0
 ```
+
+## Case 6 — Plaintext FTP Credential Exposure
+
+```text
+ftp
+ftp.request.command == "USER"
+ftp.request.command == "PASS"
+ftp.response.code == 230
+ftp.request
+tcp.port == 21
+ip.addr == 192.168.100.10 && ip.addr == 192.168.100.30
+```

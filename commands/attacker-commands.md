@@ -47,3 +47,21 @@ sudo nmap -sS -p 1-1000 192.168.100.30
 ```bash
 for i in $(seq 1 30); do ping -c 1 -W 1 192.168.100.$i; done
 ```
+
+## Case 6 — Plaintext FTP Credential Exposure
+
+```bash
+ftp 192.168.100.30
+```
+
+FTP session commands:
+
+```bash
+ftpuser
+[REDACTED PASSWORD]
+pwd
+ls
+cd ftp-test
+ls
+bye
+```
